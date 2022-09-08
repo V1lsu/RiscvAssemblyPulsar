@@ -1,18 +1,29 @@
 .include "code/macros.s"
+.include "code/MACROSv21.s"
 
 .data
+
 CHAR_POS:	.half 16,16			# x, y
 OLD_CHAR_POS:	.half 16,16			# x, y
+CHAR_DIR: 	.byte 0				# direção do char, Dir = 0, Cima = 1, Esq = 2, Baixo = 3
+
+PORTAO_LIFE:	.byte 3				# vida do portao
+
 COR_FUNDO: 	.byte 0				# cor do tile do fundo
-CHAR_DIR: 	.byte 0				#direção do char, Dir = 0, Cima = 1, Esq = 2, Baixo = 3
-PORTAO_LIFE:	.byte 3		
+
 
 .text
 SETUP:		
 		Draw(map,0,0)			#Desenha o mapa inicial em (0, 0)
 		Draw(key00,48,224)		#Desenha uma chave em (48, 224)
 		Draw(key01,176,0)		#Desenha outra chave em (176,0)
-		Draw(porta,304,208)		#Desenha o portão em (304, 208)
+		Draw(porta,256,208)		#Desenha o portão em (304, 208)
+		DrawNumber(10, 288, 16, 0)	#Desenha o numero 10 em (272,192) do frame 0
+		DrawNumber(10, 288, 16, 1)	#Desenha o numero 10 em (272,192) do frame 1
+
+		DrawNumber(9, 288, 16, 0)	#Desenha o numero 10 em (272,192) do frame 0
+		DrawNumber(9, 288, 16, 1)	#Desenha o numero 10 em (272,192) do frame 1
+
 
 GAME_LOOP:	call KEY2			# chama o procedimento de entrada do teclado
 		
@@ -156,7 +167,6 @@ FIM:		ret				# retorna
 .data
 .include "sprites/tile.s"
 .include "sprites/map.s"
-.include "sprites/char.s"
 .include "sprites/key00.s"
 .include "sprites/key01.s"
 .include "sprites/charCima.s"
@@ -167,3 +177,4 @@ FIM:		ret				# retorna
 
 .text
 .include "code/print.s"
+.include "code/SYSTEMv21.s"
