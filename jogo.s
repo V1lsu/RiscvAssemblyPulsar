@@ -1,35 +1,4 @@
-.macro Draw(%img, %x, %y)
-.text
-	la a0, %img			#carrega o endereço da imagem em a0
-	li a1, %x			#carrega o x em a1
-	li a2, %y			#carrega o y em a2
-	li a3, 0			#frame 0
-	call PRINT			#desenha
-	li a3, 1			#frame 1
-	call PRINT			#desenha
-.end_macro
-
-.macro Draw(%address, %frame)
-.text
-	la t0, %address			#carrega o endereço em t0
-	lh a1,0(t0)			#carrega o x em a1
-	lh a2,2(t0)			#carrega o y em a2
-	mv a3, %frame			#coloca o frame em a3
-	call PRINT			#desenha
-
-.end_macro
-
-.macro OpenGate()
-.text
-	la t0,PORTAO_LIFE		# carrega o endereço do portão
-	lb t0,0(t0)			# carrega a vida dele
-	bne t0,zero,GAME_LOOP		# se for > 0, entao nao abre agora	
-	#aqui o portão vai abrir, pra não ficar renderizando ele toda iteração, deixa ele com -1 de vida
-	addi t0, t0, -1			# deixa o portão com -1 de vida
-	la t1, PORTAO_LIFE		# carrega o endereço do portão
-	sb t0,0(t1)			# salva a nova vida	
-	Draw(tile,304,208)
-.end_macro
+.include "code/macros.s"
 
 .data
 CHAR_POS:	.half 16,16			# x, y
@@ -65,6 +34,29 @@ GAME_LOOP:	call KEY2			# chama o procedimento de entrada do teclado
 		
 		j GAME_LOOP			# continua o loop
 		
+	
+#Carrega o sprite certo do personagem dado sua direção
+#Deixa o endereço em a0, usa t0 e t1
+LOAD_SPRITE_CHAR:
+		la t0, CHAR_DIR 			#endereço da direção do personagem
+		lb t0,0(t0)				#carrega a direção do personagem
+	
+		li t1,0
+		la a0,charDireita			#testa se está para direita
+		beq t0, t1, LOAD_SPRITE_CHAR_RET
+
+		li t1,1					#testa se está para cima
+		la a0,charCima				
+		beq t0, t1, LOAD_SPRITE_CHAR_RET
+
+		li t1,2					#testa se está para esquerda
+		la a0,charEsquerda			
+		beq t0, t1, LOAD_SPRITE_CHAR_RET
+	
+		la a0,charBaixo				#se chegou até aqui, entao está para baixo
+
+		LOAD_SPRITE_CHAR_RET: ret	
+
 #Move o personagem usando o incremento para x em t3 e o para y em t4
 #A nova direção vem em t6
 MOVE_CHAR:	la t0,CHAR_POS			#carrega em t0 o endereço de CHAR_POS		
@@ -103,10 +95,10 @@ MOVE_CHAR:	la t0,CHAR_POS			#carrega em t0 o endereço de CHAR_POS
 
 		addi t1,t1,1				#pega exatamente a direita
 		lb t2,0(t1)				#pega a cor que está naquela posição
-		la t5,PORTAO_LIFE
-		lb t1,0(t5)
-		sub t1,t1,t2
-		sb t1,0(t5)
+		la t5,PORTAO_LIFE			#pega o endereço da vida do portao
+		lb t1,0(t5)				#carrega a vida do portao
+		sub t1,t1,t2				#remove o numero da posição
+		sb t1,0(t5)				#salva a nova vida
 
 		la t0,CHAR_DIR				#carrega a direção atual
 		sb t6,0(t0)				#salva a nova direção
@@ -126,29 +118,7 @@ MOVE_CHAR:	la t0,CHAR_POS			#carrega em t0 o endereço de CHAR_POS
         	sh t1,2(t0)				#Salva o novo y
 
         	MOVE_CHAR_RET: ret
-        	
-#Carrega o sprite certo do personagem dado sua direção
-#Deixa o endereço em a0, usa t0 e t1
-LOAD_SPRITE_CHAR:
 
-		la t0, CHAR_DIR 			#endereço da direção do personagem
-		lb t0,0(t0)				#carrega a direção do personagem
-	
-		li t1,0
-		la a0,charDireita			#testa se está para direita
-		beq t0, t1, LOAD_SPRITE_CHAR_RET
-
-		li t1,1					#testa se está para cima
-		la a0,charCima				
-		beq t0, t1, LOAD_SPRITE_CHAR_RET
-
-		li t1,2					#testa se está para esquerda
-		la a0,charEsquerda			
-		beq t0, t1, LOAD_SPRITE_CHAR_RET
-	
-		la a0,charBaixo				#se chegou até aqui, entao está para baixo
-
-		LOAD_SPRITE_CHAR_RET: ret
 
 KEY2:		li t1,0xFF200000		# carrega o endereco de controle do KDMMIO
 		lw t0,0(t1)			# Le bit de Controle Teclado
