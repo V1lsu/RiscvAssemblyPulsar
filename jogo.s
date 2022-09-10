@@ -3,26 +3,16 @@
 
 .data
 
-CHAR_POS:	.half 16,16			# x, y
-OLD_CHAR_POS:	.half 16,16			# x, y
-CHAR_DIR: 	.byte 0				# direção do char, Dir = 0, Cima = 1, Esq = 2, Baixo = 3
-
-PORTAO_LIFE:	.byte 3				# vida do portao
-
-COR_FUNDO: 	.byte 0				# cor do tile do fundo
-
+.include "code/data.asm"
 
 .text
-SETUP:		
-		Draw(map,0,0)			#Desenha o mapa inicial em (0, 0)
+SETUP:		Draw(map,0,0)			#Desenha o mapa inicial em (0, 0)
 		Draw(key00,48,224)		#Desenha uma chave em (48, 224)
 		Draw(key01,176,0)		#Desenha outra chave em (176,0)
 		Draw(porta,256,208)		#Desenha o portão em (304, 208)
+		
 		DrawNumber(10, 288, 16, 0)	#Desenha o numero 10 em (272,192) do frame 0
 		DrawNumber(10, 288, 16, 1)	#Desenha o numero 10 em (272,192) do frame 1
-
-		DrawNumber(9, 288, 16, 0)	#Desenha o numero 10 em (272,192) do frame 0
-		DrawNumber(9, 288, 16, 1)	#Desenha o numero 10 em (272,192) do frame 1
 
 
 GAME_LOOP:	call KEY2			# chama o procedimento de entrada do teclado
@@ -41,32 +31,10 @@ GAME_LOOP:	call KEY2			# chama o procedimento de entrada do teclado
 		xori a3,a3,1			# inverte o frame
 		Draw(OLD_CHAR_POS, a3)		# Limpa o rastro
 		
-		OpenGate()			#verifica se pode abrir o portão e, se puder, abre
-		
-		j GAME_LOOP			# continua o loop
-		
-	
-#Carrega o sprite certo do personagem dado sua direção
-#Deixa o endereço em a0, usa t0 e t1
-LOAD_SPRITE_CHAR:
-		la t0, CHAR_DIR 			#endereço da direção do personagem
-		lb t0,0(t0)				#carrega a direção do personagem
-	
-		li t1,0
-		la a0,charDireita			#testa se está para direita
-		beq t0, t1, LOAD_SPRITE_CHAR_RET
+		#Ops: Em openGate tem um salvo pro game loop
+	 	OpenGate()			# verifica se pode abrir o portão e, se puder, abre		
+		j GAME_LOOP	# continua o loop
 
-		li t1,1					#testa se está para cima
-		la a0,charCima				
-		beq t0, t1, LOAD_SPRITE_CHAR_RET
-
-		li t1,2					#testa se está para esquerda
-		la a0,charEsquerda			
-		beq t0, t1, LOAD_SPRITE_CHAR_RET
-	
-		la a0,charBaixo				#se chegou até aqui, entao está para baixo
-
-		LOAD_SPRITE_CHAR_RET: ret	
 
 #Move o personagem usando o incremento para x em t3 e o para y em t4
 #A nova direção vem em t6
@@ -130,6 +98,28 @@ MOVE_CHAR:	la t0,CHAR_POS			#carrega em t0 o endereço de CHAR_POS
 
         	MOVE_CHAR_RET: ret
 
+#Carrega o sprite certo do personagem dado sua direção
+#Deixa o endereço em a0, usa t0 e t1
+LOAD_SPRITE_CHAR:
+		la t0, CHAR_DIR 			#endereço da direção do personagem
+		lb t0,0(t0)				#carrega a direção do personagem
+	
+		li t1,0
+		la a0,charDireita			#testa se está para direita
+		beq t0, t1, LOAD_SPRITE_CHAR_RET
+
+		li t1,1					#testa se está para cima
+		la a0,charCima				
+		beq t0, t1, LOAD_SPRITE_CHAR_RET
+
+		li t1,2					#testa se está para esquerda
+		la a0,charEsquerda			
+		beq t0, t1, LOAD_SPRITE_CHAR_RET
+	
+		la a0,charBaixo				#se chegou até aqui, entao está para baixo
+
+		LOAD_SPRITE_CHAR_RET: ret	
+
 
 KEY2:		li t1,0xFF200000		# carrega o endereco de controle do KDMMIO
 		lw t0,0(t1)			# Le bit de Controle Teclado
@@ -163,6 +153,8 @@ KEY2:		li t1,0xFF200000		# carrega o endereco de controle do KDMMIO
 		beq t2,t0,MOVE_CHAR		# se tecla pressionada for 'd', move para direita
 	
 FIM:		ret				# retorna
+
+
 
 .data
 .include "sprites/tile.s"
