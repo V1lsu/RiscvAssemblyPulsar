@@ -7,9 +7,13 @@
 
 .text
 SETUP:		Draw(map,0,0)			#Desenha o mapa inicial em (0, 0)
-		Draw(key00,48,224)		#Desenha uma chave em (48, 224)
-		Draw(key01,176,0)		#Desenha outra chave em (176,0)
-		Draw(porta,256,208)		#Desenha o portão em (304, 208)
+		
+		Draw(key00,48,192)		#Desenha uma chave
+		Draw(key01,176,0)		#Desenha uma chave
+				
+		Draw(porta,256,192)		#Desenha o portão em (304, 208)
+		
+		Draw(fuel,16,215)		#Desenho do combustivel
 		
 		DrawNumber(10, 288, 16, 0)	#Desenha o numero 10 em (272,192) do frame 0
 		DrawNumber(10, 288, 16, 1)	#Desenha o numero 10 em (272,192) do frame 1
@@ -33,7 +37,7 @@ GAME_LOOP:	call KEY2			# chama o procedimento de entrada do teclado
 		
 		#Ops: Em openGate tem um salvo pro game loop
 	 	OpenGate()			# verifica se pode abrir o portão e, se puder, abre		
-		j GAME_LOOP	# continua o loop
+		j GAME_LOOP			# continua o loop
 
 
 #Move o personagem usando o incremento para x em t3 e o para y em t4
@@ -166,6 +170,7 @@ FIM:		ret				# retorna
 .include "sprites/charEsquerda.s"
 .include "sprites/charDireita.s"
 .include "sprites/porta.s"
+.include "sprites/fuel.s"
 
 .text
 .include "code/print.s"

@@ -29,10 +29,11 @@
 .macro OpenGate()			# Checa se é possivel abrir o portão e, se for, abre apenas uma vez
 	la t0,PORTAO_LIFE		# carrega o endereço do portão
 	lb t0,0(t0)			# carrega a vida dele
-	bne t0,zero,GAME_LOOP		# se for > 0, entao nao abre agora	
+	bne t0,zero,OpenGateRet		# se for > 0, entao nao abre agora	
 	#aqui o portão vai abrir, pra não ficar renderizando ele toda iteração, deixa ele com -1 de vida
 	addi t0, t0, -1			# deixa o portão com -1 de vida
 	la t1, PORTAO_LIFE		# carrega o endereço do portão
 	sb t0,0(t1)			# salva a nova vida	
-	Draw(tile,256,208)
+	Draw(tile,256,192)
+	OpenGateRet:			#continua com o codigo no game loop
 .end_macro
