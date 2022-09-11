@@ -11,12 +11,9 @@ SETUP:		Draw(map,0,0)			#Desenha o mapa inicial em (0, 0)
 		Draw(key00,48,192)		#Desenha uma chave
 		Draw(key01,176,0)		#Desenha uma chave
 				
+		Draw(charDireita, 16, 16)
+		
 		Draw(porta,256,192)		#Desenha o portão em (304, 208)
-		
-		Draw(fuel,16,215)		#Desenho do combustivel
-		
-		DrawNumber(10, 288, 16, 0)	#Desenha o numero 10 em (272,192) do frame 0
-		DrawNumber(10, 288, 16, 1)	#Desenha o numero 10 em (272,192) do frame 1
 
 
 GAME_LOOP:	call KEY2			# chama o procedimento de entrada do teclado
@@ -26,7 +23,8 @@ GAME_LOOP:	call KEY2			# chama o procedimento de entrada do teclado
 		call LOAD_SPRITE_CHAR 		# carrega o sprite de acordo com a direção em a0
 		
 		Draw(CHAR_POS,s0)
-		
+		OpenGate()			# verifica se pode abrir o portão e, se puder, abre		
+						
 		li t0,0xFF200604		# carrega em t0 o endereco de troca de frame
 		sw s0,0(t0)			# mostra o sprite pronto para o usuario
 			
@@ -35,10 +33,12 @@ GAME_LOOP:	call KEY2			# chama o procedimento de entrada do teclado
 		xori a3,a3,1			# inverte o frame
 		Draw(OLD_CHAR_POS, a3)		# Limpa o rastro
 		
-		#Ops: Em openGate tem um salvo pro game loop
-	 	OpenGate()			# verifica se pode abrir o portão e, se puder, abre		
 		j GAME_LOOP			# continua o loop
 
+
+GAME_OVER: #apenas encerra
+	li a7, 10
+	ecall
 
 #Move o personagem usando o incremento para x em t3 e o para y em t4
 #A nova direção vem em t6
@@ -99,6 +99,8 @@ MOVE_CHAR:	la t0,CHAR_POS			#carrega em t0 o endereço de CHAR_POS
         	lh t1,2(t0)				#Carrega o y em t1
         	add t1,t1,t4				#add o incrementono t
         	sh t1,2(t0)				#Salva o novo y
+
+		CheckFuel()				# Diminue um do combustivel e, se ele ficar zerado, encerra
 
         	MOVE_CHAR_RET: ret
 
@@ -170,7 +172,6 @@ FIM:		ret				# retorna
 .include "sprites/charEsquerda.s"
 .include "sprites/charDireita.s"
 .include "sprites/porta.s"
-.include "sprites/fuel.s"
 
 .text
 .include "code/print.s"

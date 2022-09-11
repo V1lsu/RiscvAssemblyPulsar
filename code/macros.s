@@ -3,12 +3,15 @@
 	li a1, %x			# carrega o x em a1
 	li a2, %y			# carrega o y em a2
 	li a3, 0			# frame 0
+	
+	#Corrigir isso aqui!!! Não desenhar nos dpos frames!!!!!!!!!!!!!!!
+	
 	call PRINT			# desenha
 	li a3, 1			# frame 1
 	call PRINT			# desenha
 .end_macro
 
-.macro Draw(%address, %frame)		# Desenha a imagem que tá no endereço address no frame <frame>
+.macro Draw(%address, %frame)		# Desenha a imagem que tá em a0 no frame <frame> e nas coords salva em <address>
 	la t0, %address			# carrega o endereço em t0
 	lh a1,0(t0)			# carrega o x em a1
 	lh a2,2(t0)			# carrega o y em a2
@@ -16,14 +19,19 @@
 	call PRINT			# desenha
 .end_macro
 
-.macro DrawNumber(%num, %x, %y, %frame)	# Desenha um numero na posição dada
-	li a0, %num			# Numero que será desenhado
-	li a1, %x			# posição x
-	li a2, %y			# posição y
-	li a3, 0x000000ff		# cor do texto ff e fundo preto 00
-	li a4, %frame			#escolhe o frame
-	li a7, 101			# ecall do print
-	ecall
+.macro DrawNumber(%num, %x, %y)			# Desenha um numero na posição dada
+	add a0, zero, %num			# Numero que será desenhado
+	addi a1, zero, %x			# Posição x
+	addi a2, zero, %y			# posição y
+	li a3, 0x000000ff			# cor do texto ff e fundo preto 00
+	
+	li a4,0xFF200604			# endereço do valor do frame atual	
+	lw a4, 0(a4)				# pega o frame atual
+	
+	xori a4, a4, 1				# inverte o frame atual
+	
+	li a7, 101				# ecall do print
+	ecall		
 .end_macro
 
 .macro OpenGate()			# Checa se é possivel abrir o portão e, se for, abre apenas uma vez
@@ -36,4 +44,42 @@
 	sb t0,0(t1)			# salva a nova vida	
 	Draw(tile,256,192)
 	OpenGateRet:			#continua com o codigo no game loop
+.end_macro
+
+.macro DrawImageInHiddenFrame(%address, %regx, %regy)
+	la a0, %address
+	mv a1, %regx
+	mv a2, %regy
+	
+	li a3, 0xFF200604
+	lw a3, 0(a3)
+	xori a3, a3, 1
+	
+	call PRINT
+.end_macro
+
+.macro DrawImageInHiddenFrame(%address, %coordsAddress)
+	la a0, %address
+	
+	mv a1, %regx
+	mv a2, %regy
+	
+	li a3, 0xFF200604
+	lw a3, 0(a3)
+	xori a3, a3, 1
+	
+	call PRINT
+.end_macro
+
+.macro CheckFuel()
+	la t0, FUEL
+	lb t1, 0(t0)
+	addi t1,t1,-1
+	sb t1, 0(t0)
+	DrawNumber(t1, 300, 16)
+	#apagando o rastro
+	#Draw(tile, 300, 16) #frame atual!!!!!!!!
+	#criar DrawImageShowingFrame
+	#criar DrawImagemHiddenFrame
+	beq t1, zero, GAME_OVER
 .end_macro
