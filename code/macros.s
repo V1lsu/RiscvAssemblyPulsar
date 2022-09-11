@@ -19,17 +19,12 @@
 	call PRINT			# desenha
 .end_macro
 
-.macro DrawNumber(%num, %x, %y)			# Desenha um numero na posição dada
+.macro DrawNumber(%num, %x, %y, %frame)			# Desenha um numero na posição dada
 	add a0, zero, %num			# Numero que será desenhado
 	addi a1, zero, %x			# Posição x
 	addi a2, zero, %y			# posição y
 	li a3, 0x000000ff			# cor do texto ff e fundo preto 00
-	
-	li a4,0xFF200604			# endereço do valor do frame atual	
-	lw a4, 0(a4)				# pega o frame atual
-	
-	xori a4, a4, 1				# inverte o frame atual
-	
+	li a4, %frame
 	li a7, 101				# ecall do print
 	ecall		
 .end_macro
@@ -76,10 +71,7 @@
 	lb t1, 0(t0)
 	addi t1,t1,-1
 	sb t1, 0(t0)
-	DrawNumber(t1, 300, 16)
-	#apagando o rastro
-	#Draw(tile, 300, 16) #frame atual!!!!!!!!
-	#criar DrawImageShowingFrame
-	#criar DrawImagemHiddenFrame
+	DrawNumber(t1, 300, 16, 0)
+	DrawNumber(t1, 300, 16, 1)
 	beq t1, zero, GAME_OVER
 .end_macro
