@@ -6,19 +6,30 @@
 	call PRINT			# desenha
 .end_macro
 
+.macro DrawWithImmCoords(%address, %x, %y)
+	la a0, %address
+	li a1, %x
+	li a2, %y
+	li a3, 0
+	#desenhar nos dois frames por enquanto
+	call PRINT
+	li a3, 1
+	call PRINT
+	
+.end_macro
+
 .macro DrawNumber(%num, %x, %y, %frame, %corFundo, %corTexto)		# Desenha um numero na posição dada
 	add a0, zero, %num						# Numero que será desenhado
 	addi a1, zero, %x						# Posição x
 	addi a2, zero, %y						# posição y
 	
-	li a3, 0x000000ff						# cor do texto ff e fundo preto 00
 	add a3, zero, zero						# faz a3 = 0
 	addi a3, a3, %corFundo						# adiciona a cor do fundo
-	srli a3, a3, 2
-	addi a3, a3, %corTexto
+	srli a3, a3, 2							# shifta duas vezes pra cor do texto não sobrepor a do fundo
+	addi a3, a3, %corTexto						# add a cor do fundo
 	
 	li a4, %frame
-	li a7, 101				# ecall do print
+	li a7, 101							# ecall do print
 	ecall		
 .end_macro
 
@@ -62,19 +73,27 @@
 	addi t1,t1,-1
 	sb t1, 0(t0)
 	li t0, 9
-	bne t0, t1, FUEL_CONTINUE
+	bgt t1, t0, DrawGreenFuel
+			
+	#bne t1, t0, DrawRedFuel
+
+	# if(fuel == 9) 
+	#	desenha tile na segunda posição
+	# desenha numero em vermelho
 	
-	#la a0, tile
-	#li a1, 316
-	#li a2, 16
-	#li a3, 0
-	#call PRINT
-	#li a3, 1
-	#call PRINT
+	#nesse momento o fuel é 9
+	#DrawWithImmCoords(tile, 308, 16)
+			
+#DrawRedFuel:
+	DrawNumber(t1, 300, 16, 0, 0x2f, 0xff) #corrigir esse 0x2f pra ser um vermelho bem claro
+	DrawNumber(t1, 300, 16, 1, 0x2f, 0xff)
+	j FuelRet	
 		
-FUEL_CONTINUE:
-	DrawNumber(t1, 300, 16, 0, 0x00, 0xff)
-	DrawNumber(t1, 300, 16, 1, 0x00, 0xff)
+DrawGreenFuel:
+	DrawNumber(t1, 300, 16, 0, 0xf0, 0xff)
+	DrawNumber(t1, 300, 16, 1, 0xf0, 0xff)
 	
+FuelRet:
 	beq t1, zero, GAME_OVER
+	
 .end_macro
