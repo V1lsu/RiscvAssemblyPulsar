@@ -6,22 +6,6 @@
 	call PRINT			# desenha
 .end_macro
 
-.macro DrawNumber(%num, %x, %y, %frame, %corFundo, %corTexto)		# Desenha um numero na posi√ß√£o dada
-	add a0, zero, %num						# Numero que ser√° desenhado
-	addi a1, zero, %x						# Posi√ß√£o x
-	addi a2, zero, %y						# posi√ß√£o y
-	
-	li a3, 0x000000ff						# cor do texto ff e fundo preto 00
-	add a3, zero, zero						# faz a3 = 0
-	addi a3, a3, %corFundo						# adiciona a cor do fundo
-	srli a3, a3, 2
-	addi a3, a3, %corTexto
-	
-	li a4, %frame
-	li a7, 101				# ecall do print
-	ecall		
-.end_macro
-
 .macro DrawImageInBothFrames(%imgName, %coordsName)
 	la a0, %imgName
 	la t0, %coordsName
@@ -56,25 +40,118 @@
 	OpenGateRet:			#continua com o codigo no game loop
 .end_macro
 
+
+
+# CheckFuel() n„o precisa chamar DrawNumber
+# Est· desenhando 3 dÌgitos, mesmo que seja um zero ‡ esqueda
+# Quando FUEL < 10, desenha em vermelho, do contr·rio, desenha em verde
+# Atribui valores pra todos os argumentos sempre que desenho pra evitar comportamento n„o previsto
 .macro CheckFuel()
+	# Carrega FUEL, FUEL -= 1, guarda FUEL
 	la t0, FUEL
 	lb t1, 0(t0)
 	addi t1,t1,-1
 	sb t1, 0(t0)
-	li t0, 9
-	bne t0, t1, FUEL_CONTINUE
 	
-	#la a0, tile
-	#li a1, 316
-	#li a2, 16
-	#li a3, 0
-	#call PRINT
-	#li a3, 1
-	#call PRINT
-		
-FUEL_CONTINUE:
-	DrawNumber(t1, 300, 16, 0, 0x00, 0xff)
-	DrawNumber(t1, 300, 16, 1, 0x00, 0xff)
+	# if(FUEL < 10){ ...
+	addi t0, zero, 10
+	blt t1, t0, DEZ
 	
+	# esle if(FUEL < 100){ ...
+	addi t0, zero, 100
+	blt t1, t0, CEM
+
+	# Essas 5 linhas se repetem muitas vezes abaixo, elas atribuem os valores dos argumentos
+	# a3 = 0x38 È bit 1 apenas para verde
+	# Os bits de 15 a 8 s„o todos 0, determinando preto como cor de fundo
+	addi a1, zero, 290
+	addi a2, zero, 16
+	addi a3, zero, 0x38
+	addi a4, zero, 0
+	addi a7, zero, 101
+	
+	# Desenha no frame a4 = 0
+	add a0, zero, t1
+	ecall
+	
+	addi a1, zero, 290
+	addi a2, zero, 16
+	addi a3, zero, 0x38
+	addi a4, zero, 1
+	addi a7, zero, 101
+	
+	# Desenha no freme a4 = 1
+	add a0, zero, t1
+	ecall
+	
+	# Quando a funÁ„o desenha um n˙mero, a cordenada 'x' aumenta automaticamente
+	# ISSO INFLUENCIA O OUTRO FRAME!!!
+
+CHECA_ZERO:
+	# Os casos de FUEL < 10, 10 <= FUEL < 100 e 100 <= FUEL pulam para c· e checam se deu GAME OVER
+	# Depois pulam para o fim do macro
 	beq t1, zero, GAME_OVER
+	j FIM_CheckFuel
+
+CEM:
+	addi a1, zero, 290
+	addi a2, zero, 16
+	addi a3, zero, 0x38
+	addi a4, zero, 0
+	addi a7, zero, 101
+	
+	# Desenha o 0 uma vez antes do n˙mero
+	add a0, zero, zero
+	ecall
+	add a0, zero, t1
+	ecall
+	
+	addi a1, zero, 290
+	addi a2, zero, 16
+	addi a3, zero, 0x38
+	addi a4, zero, 1
+	addi a7, zero, 101
+	
+	add a0, zero, zero
+	ecall
+	add a0, zero, t1
+	ecall
+	
+	j CHECA_ZERO
+
+DEZ:
+	# Repare que a3 = 0x07, bit 1 apenas para vermelho
+	addi a1, zero, 290
+	addi a2, zero, 16
+	addi a3, zero, 0x07
+	addi a4, zero, 0
+	addi a7, zero, 101
+	
+	# Desenha 0 duas vezes antes do n˙mero
+	add a0, zero, zero
+	ecall
+	add a0, zero, zero
+	ecall
+	add a0, zero, t1
+	ecall
+	
+	addi a1, zero, 290
+	addi a2, zero, 16
+	addi a3, zero, 0x07
+	addi a4, zero, 1
+	addi a7, zero, 101
+	
+	add a0, zero, zero
+	ecall
+	add a0, zero, zero
+	ecall
+	add a0, zero, t1
+	ecall
+	
+	j CHECA_ZERO
+
+FIM_CheckFuel:
+
+# Podemos diminuir o cÛdigo desse macro, ou deixar como est· para debug mais f·cil
+# Os valores imediatos se repetem muitas vezes
 .end_macro
